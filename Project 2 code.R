@@ -1,0 +1,33 @@
+getwd()
+wdir <- "/Users/Jun/Desktop/SBU/22 Spring/AMS 315/Proj 2"
+setwd(wdir)
+Project2 <- read.csv('378390_project2.csv', header=TRUE)
+Enviroment_Model <- lm(Y ~ E1 + E2 + E3 + E4, data = Project2)
+summary(Enviroment_Model)
+summary(Enviroment_Model)$adj.r.squared
+Model_raw <- lm(Y ~ (E1+E2+E3+E4+G1+G2+G3+G4+G5+G6+G7+G8+G9+G10+G11+G12+G13+G14+G15+G16+G17+G18+G19+G20)^2, data = Project2)
+View(Model_raw)
+plot(resid(Model_raw) ~ fitted(Model_raw), main = 'Residual Plot')
+library(MASS)
+boxcox(Model_raw)
+Model_trans <- lm( I(Y^.9) ~ (E1+E2+E3+E4+G1+G2+G3+G4+G5+G6+G7+G8+G9+G10+G11+G12+G13+G14+G15+G16+G17+G18+G19+G20)^2, data = Project2)
+summary(Model_raw)$adj.r.square
+summary(Model_trans)$adj.r.square
+plot(resid(Model_trans) ~ fitted(Model_trans), main = 'Transfomed Residual Plot')
+#install.packages("leaps")
+library(leaps)
+Model <- regsubsets( model.matrix(Model_trans)[,-1], I((Project2$Y)^.9), nbset = 1, nvmax = 5, method = 'forward', intercept = TRUE)
+temp <- summary(Model)
+library("knitr")
+Var <- colnames(model.matrix(Model_trans))
+Model_select <- apply(temp$which, 1, function(x) paste0(Var[x], collapse = '+'))
+kable(data.frame(cbind(model = Model_select, adjR2 = temp$adjr2, BIC = temp$bic)), caption = 'Model Summary')
+Model_main <- lm( I(Y^.9) ~ E1+E2+E3+E4+G1+G2+G3+G4+G5+G6+G7+G8+G9+G10+G11+G12+G13+G14+G15+G16+G17+G18+G19+G20, data = Project2)
+temp <- summary(Model_main)
+kable(temp$coefficients[abs(temp$coefficients[,4]) <= 0.01, ], caption = 'Sig Coefficients')
+Model_2stage <- lm( I(Y^.9) ~ (E3+E4+G16)^2, data = Project2)
+temp <- summary(Model_2stage)
+temp$coefficients
+kable(temp$coefficients[ abs(temp$coefficients[, 3]) >= 4, ])
+Model_fianl <- lm(I(Y^.9) ~ E3 + E4, data = Project2)
+summary(Model_fianl)
